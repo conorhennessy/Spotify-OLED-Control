@@ -1,0 +1,8 @@
+[credentials]
+client_id = 
+client_secret = 
+redirect_uri = http://localhost/
+username = 
+
+[oled]
+speed = 0.8
