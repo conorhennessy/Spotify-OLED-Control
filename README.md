@@ -32,3 +32,7 @@ Log into this dashboard with your Spotify account and note the credentials shown
 > Note: You may now wish to modify screen variables in *Spotify_Oled_Control.py* to suit resolution, I2C/SPI, etc values for your OLED display.
 4. Copy *spotify-oled.service* from the repo to */etc/systemd/system/* and run `sudo systemctl enable spotify-oled.service` (You can also replace `enable` with `start` or `status` for manual starting/stoping the service)
 > Note: It maybe be necessary to run `sudo chmod +x Spotify_Oled_Control.py` for autostart to work in some cases...
+
+## Credit
+Big Credit to Alex, my housemate, for getting the ball rolling for this project, creating the services file and collab'ing on this project.
+* **Alex Hockly** - [@alhockly](https://github.com/alhockly)
