@@ -170,7 +170,8 @@ class SeekThread(threading.Thread):
         while True:
             diff = time.time() - self.lastTime
             self.lastTime = time.time()
-            self.currentPos += diff
+            if self.isPlaying:
+                self.currentPos += diff
             percent = self.currentPos / self.songLen
             self.xpos = self.padding + int(percent * (Width - self.padding * 2))
             if percent >= 1:
