@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
 import os
-import time
-
-from json.decoder import JSONDecodeError
-
-import spotipy
-import spotipy.util as util
-
-from luma.core.render import canvas
-
-from PIL import ImageFont
-
-from luma.core.interface.serial import i2c, spi
-from luma.core.render import canvas
-from luma.oled.device import ssd1306, ssd1309, ssd1325, ssd1331, sh1106
-
 import threading
-
+import time
 from datetime import datetime
 from datetime import timedelta
 
 import configparser
+import spotipy
+from PIL import ImageFont
+from luma.core.interface.serial import i2c
+from luma.core.render import canvas
+from luma.oled.device import ssd1306
 
 font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "fonts", 'cour.ttf'))
 
@@ -43,24 +33,14 @@ seekfontsize = 10
 # Get associated values from config file
 config = configparser.ConfigParser()
 config.read('config.txt')
-credentialValues = config['credentials']
-
-client_id = credentialValues['client_id']
-client_secret = credentialValues['client_secret']
-redirect_uri = credentialValues['redirect_uri']
-username = credentialValues['username']
-
-scope = 'user-read-playback-state'
+credentials = config['credentials']
 
 
 class Spotify:
-    def __init__(self, username, scope, client_id, client_secret, redirect_uri):
-        self.username = username
-        self.scope = scope
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_uri = redirect_uri
-        self.cache_path = ".cache-{}".format(username)
+    def __init__(self):
+        self.username = credentials['username']
+        self.scope = 'user-read-playback-state'
+        self.cache_path = ".cache-{}".format(self.username)
 
         self.track = None
         self.artists = None
@@ -71,9 +51,9 @@ class Spotify:
 
         self.sp = spotipy.Spotify(
             auth_manager=spotipy.SpotifyOAuth(
-                client_id=client_id,
-                client_secret=client_secret,
-                redirect_uri=redirect_uri,
+                client_id=credentials['client_id'],
+                client_secret=credentials['client_secret'],
+                redirect_uri=credentials['redirect_uri'],
                 scope=self.scope,
                 cache_path=self.cache_path)
         )
@@ -125,7 +105,7 @@ class ScrollThread(threading.Thread):
                 if self.move:
                     self.x += scrollbackspeed
                 else:
-                    self.x -= scrollspeed
+                    self.x -= scrollspeed  # TODO change this scroll logic so scrolls left continuously
 
                 if self.x < ((Width - self.w) - 10) and not self.move:  # Was moving left and has moved enough
                     self.move = True
@@ -216,8 +196,7 @@ if __name__ == "__main__":
         with canvas(device) as draw:
             draw.text((Width / 2, 32), "loading", font=ImageFont.truetype(font_path, 12), fill="white")
 
-        spotifyData = Spotify(username=username, scope=scope, client_id=client_id, client_secret=client_secret,
-                              redirect_uri=redirect_uri)
+        spotifyData = Spotify()
         lastSong = ""
         spotifyData.get_playback()
 
