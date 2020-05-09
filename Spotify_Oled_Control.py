@@ -60,6 +60,7 @@ class Spotify:
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
+        self.cache_path = ".cache-{}".format(username)
 
         self.track = None
         self.artists = None
@@ -68,40 +69,28 @@ class Spotify:
         self.shuffleState = None
         self.isPlaying = None
 
-        try:
-            self.token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
-        except (AttributeError, JSONDecodeError):
-            os.remove(".cache-{}".format(username))
-            self.token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
-
-    # Tokens have a life time of 1hr set by Spotify,
-    # When a token expires a spotipy.client.SpotifyException is raised&  anew token required
-    def refresh_token(self):
-        self.token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
+        self.sp = spotipy.Spotify(
+            auth_manager=spotipy.SpotifyOAuth(
+                client_id=client_id,
+                client_secret=client_secret,
+                redirect_uri=redirect_uri,
+                scope=self.scope,
+                cache_path=self.cache_path)
+        )
 
     def get_playback(self):
-        if self.token:
-            sp = spotipy.Spotify(auth=self.token)
-            try:
-                playback = sp.current_playback()
-            # spotipy.client.SpotifyException is raised when a token expires, so token is refreshed
-            except spotipy.client.SpotifyException:
-                Spotify.refresh_token(self)
-                playback = sp.current_playback()
+        playback = self.sp.current_playback()
 
-            try:
-                self.track = playback['item']['name']
-                self.artists = playback['item']['artists']
-                self.durationMs = playback['item']['duration_ms']
-                self.progressMs = playback['progress_ms']
-                self.shuffleState = playback['shuffle_state']
-                self.isPlaying = playback['is_playing']
-            # TypeError is raised when nothing is playing
-            except TypeError:
-                self.isPlaying = False
-
-        else:
-            print("Unable to retrieve current playback - Can't get token for ", username)
+        try:
+            self.track = playback['item']['name']
+            self.artists = playback['item']['artists']
+            self.durationMs = playback['item']['duration_ms']
+            self.progressMs = playback['progress_ms']
+            self.shuffleState = playback['shuffle_state']
+            self.isPlaying = playback['is_playing']
+        # TypeError is raised when nothing is playing
+        except TypeError:
+            self.isPlaying = False
 
     def __str__(self):
         if self.isPlaying:
