@@ -50,6 +50,7 @@ class Spotify:
         self.isPlaying = None
 
         self.sp = spotipy.Spotify(
+            requests_timeout=10,
             auth_manager=spotipy.SpotifyOAuth(
                 client_id=credentials['client_id'],
                 client_secret=credentials['client_secret'],
@@ -200,7 +201,7 @@ if __name__ == "__main__":
         lastSong = ""
         spotifyData.get_playback()
 
-        NETWORKTIMEOUT = 1  # ten seconds
+        NETWORKTIMEOUT = 1
         drawTime = datetime.now() + timedelta(seconds=NETWORKTIMEOUT)
 
         songScrollThread = ScrollThread(word=remove_feat(spotifyData.track), fontsize=songfontsize, ypos=5)
