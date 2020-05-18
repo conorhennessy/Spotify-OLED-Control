@@ -60,17 +60,13 @@ class Spotify:
 
     def get_playback(self):
         playback = self.sp.current_playback()
-
-        try:
+        self.isPlaying = playback['is_playing']
+        if self.isPlaying:
             self.track = playback['item']['name']
             self.artists = playback['item']['artists']
             self.durationMs = playback['item']['duration_ms']
             self.progressMs = playback['progress_ms']
             self.shuffleState = playback['shuffle_state']
-            self.isPlaying = playback['is_playing']
-        # TypeError is raised when nothing is playing
-        except TypeError:
-            self.isPlaying = False
 
     def __str__(self):
         if self.isPlaying:
