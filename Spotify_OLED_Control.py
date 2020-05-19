@@ -4,17 +4,24 @@ import threading
 import time
 from datetime import datetime
 from datetime import timedelta
-
 import configparser
 import spotipy
 from PIL import ImageFont
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import ssd1306
+from RPi import GPIO
 
-font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "fonts", 'cour.ttf'))
+clk = 17
+dt = 18
+btn = 27
 
-font = ImageFont.truetype(font_path, 18)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(btn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+clkLastState = GPIO.input(clk)
 
 # substitute spi(device=0, port=0) below if using that interface
 serial = i2c(port=1, address=0x3C)
@@ -22,6 +29,9 @@ serial = i2c(port=1, address=0x3C)
 device = ssd1306(serial)
 Width = 128
 Height = 64
+
+font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "fonts", 'cour.ttf'))
+font = ImageFont.truetype(font_path, 18)
 
 scrollspeed = 4
 scrollbackspeed = 8
@@ -34,6 +44,7 @@ config = configparser.ConfigParser()
 config.read('config.txt')
 credentials = config['credentials']
 
+global spotifyData
 
 class Spotify:
     def __init__(self):
@@ -47,6 +58,11 @@ class Spotify:
         self.progressMs = None
         self.shuffleState = None
         self.isPlaying = None
+        self.volume = self.get_vol()
+        if self.volume == 0:
+            self.isMuted = True
+        else:
+            self.isMuted = False
 
         self.sp = spotipy.Spotify(
             requests_timeout=10,
@@ -67,6 +83,12 @@ class Spotify:
             self.durationMs = playback['item']['duration_ms']
             self.progressMs = playback['progress_ms']
             self.shuffleState = playback['shuffle_state']
+
+    def get_vol(self):
+        if self.isPlaying:
+            playback = self.sp.current_playback()
+            self.volume = playback['device']['volume_percent']
+            return self.volume
 
     def __str__(self):
         if self.isPlaying:
@@ -187,6 +209,19 @@ def concat_artists(artists):
         return artists[0]["name"]
 
 
+def rotary_callback(channel):
+    global clkLastState
+    clkState = GPIO.input(clk)
+    if clkState != clkLastState:
+        dtState = GPIO.input(dt)
+        if dtState != clkState and spotifyData.get_vol() < 100:
+            spotifyData.sp.volume(spotifyData.get_vol() + 10)
+        elif spotifyData.get_vol() > 0:
+            spotifyData.sp.volume(spotifyData.get_vol() - 10)
+        print (spotifyData.get_vol())
+        clkLastState = clkState
+
+
 if __name__ == "__main__":
     try:
         with canvas(device) as draw:
@@ -195,6 +230,9 @@ if __name__ == "__main__":
         spotifyData = Spotify()
         lastSong = ""
         spotifyData.get_playback()
+
+        clkLastState = GPIO.input(clk)
+        GPIO.add_event_detect(clk, GPIO.BOTH, callback=rotary_callback, bouncetime=100)
 
         NETWORKTIMEOUT = 1
         drawTime = datetime.now() + timedelta(seconds=NETWORKTIMEOUT)
@@ -279,4 +317,5 @@ if __name__ == "__main__":
             print("Song ended or changed")
 
     except KeyboardInterrupt:
+        GPIO.cleanup()
         pass

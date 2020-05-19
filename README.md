@@ -1,8 +1,9 @@
 # Spotify-OLED
-Spotify now playing on an OLED screen. 
+Spotify now playing on an OLED screen, with a volume dial 
 ![A preview of a song now playing on an OLED screen attached to a RaspberryPi Zero](https://github.com/conorhennessy/Spotify-OLED-control/blob/master/Serving_Suggestion.jpg)
+![A demo of the volume dial in action, showing Spotify with volume slider on display](https://github.com/conorhennessy/Spotify-OLED-control/blob/master/Volume_Demo.gif)
 
-Added controls to skip or go to previous track and to change volume will be in an upcoming version.
+Added controls to skip or go to previous track will be added in an upcoming version.
 
 ## Getting Started
 
