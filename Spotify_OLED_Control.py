@@ -50,7 +50,7 @@ global spotifyData
 class Spotify:
     def __init__(self):
         self.username = credentials['username']
-        self.scope = 'user-read-playback-state'
+        self.scope = 'user-read-playback-state, user-modify-playback-state'
         self.cache_path = ".cache-{}".format(self.username)
 
         self.track = None
@@ -72,7 +72,8 @@ class Spotify:
                 client_secret=credentials['client_secret'],
                 redirect_uri=credentials['redirect_uri'],
                 scope=self.scope,
-                cache_path=self.cache_path)
+                cache_path=self.cache_path,
+                open_browser=False)
         )
 
     def get_playback(self):
