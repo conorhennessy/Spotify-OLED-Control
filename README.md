@@ -20,7 +20,6 @@ Log into this dashboard with your Spotify account and note the credentials shown
 #### Required Packages
 - python3 `sudo apt-get install python3`
 - pip3 `sudo apt-get install python3-pip`
-- git `sudo apt-get install git`
 - libopenjp2-7 `sudo apt-get install libopenjp2-7-dev`
 	
 ### Setup
