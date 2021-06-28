@@ -9,8 +9,8 @@ After=network-online.target
 [Service]
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/Spotify-OLED
-ExecStart=/home/pi/Spotify-OLED/Spotify-OLED.py
+WorkingDirectory=/home/pi/Spotify-OLED-Control
+ExecStart=/home/pi/Spotify-OLED-Control/Spotify-OLED-Control.py
 ExecStartPre=/bin/sleep 10
 Type=simple
 
