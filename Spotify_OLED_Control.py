@@ -211,7 +211,7 @@ def concat_artists(artists):
         return artists[0]["name"]
 
 
-def rotary_callback():
+def rotary_callback(bouncetime):
     global clkLastState
     clk_state = GPIO.input(clk)
     if clk_state != clkLastState:
