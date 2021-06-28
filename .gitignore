@@ -1,4 +1,5 @@
 config.txt
+venv/
 
 .idea/*
 *.out
