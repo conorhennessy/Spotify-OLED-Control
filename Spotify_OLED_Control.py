@@ -129,24 +129,35 @@ class UIThread:
                     # track name scroller
                     draw.text((scroll_infos[0].x, 0), track_scroll_info.string, font=self.track_font, fill="white")
                     # artist name scroller
-                    draw.text((scroll_infos[1].x, 24), artist_scroll_info.string, font=self.artist_font, fill="white")
+                    draw.text((scroll_infos[1].x, Height - 40), artist_scroll_info.string, font=self.artist_font, fill="white")
 
                 if not spotify_data.isPlaying:
                     # draw pause symbol
-                    draw.rectangle((67, (Height - 11), 70, Height), "white", "white", 1)
-                    draw.rectangle((55, (Height - 11), 58, Height), "white", "white", 1)
+                    draw.rectangle((55, (Height - 12), 58, Height), "white", "white", 1)  # Left bar
+                    draw.rectangle((67, (Height - 12), 70, Height), "white", "white", 1)  # Right bar
                 else:
-                    # draw seek bar outline
-                    draw.rectangle((seekbar_info.padding, (Height - 6), (Width - seekbar_info.padding), (Height - 3)),
-                                   "black", "white", 1)
-                    # draw bar within
-                    draw.rectangle((seekbar_info.padding, (Height - 5), (seekbar_info.x_pos + 2), (Height - 4)),
-                                   "black", "white", 2)
+                    if spotify_data.isMuted:
+                        # draw muted speaker icon
+                        draw.line((55, (Height - 9), 58, (Height - 9)), "white", 1)  # -
+                        draw.line((55, (Height - 9), 55, (Height - 4)), "white", 1)  # |
+                        draw.line((55, (Height - 4), 58, (Height - 4)), "white", 1)    # -
+                        draw.line((58, (Height - 9), 62, (Height - 12)), "white", 1)   # /
+                        draw.line((62, (Height - 12), 62, Height), "white", 1)           # |
+                        draw.line((58, (Height - 4), 62, Height), "white", 1)           # \
+                        draw.line((65, (Height - 9), 70, (Height - 4)), "white", 1)       # \
+                        draw.line((65, (Height - 4), 70, (Height - 9)), "white", 1)       # /
+                    else:
+                        # draw seek bar outline
+                        draw.rectangle((seekbar_info.padding, (Height - 7), (Width - seekbar_info.padding), (Height - 4)),
+                                       "black", "white", 1)
+                        # draw seek bar within
+                        draw.rectangle((seekbar_info.padding, (Height - 6), (seekbar_info.x_pos + 2), (Height - 5)),
+                                       "black", "white", 2)
 
                 # draw current time
-                draw.text((0, (Height - 11)), seekbar_info.currentPosString, font=self.seekbar_font, fill="white")
+                draw.text((0, (Height - 12)), seekbar_info.currentPosString, font=self.seekbar_font, fill="white")
                 # end time
-                draw.text((Width - seekbar_info.padding + 5, (Height - 11)), seekbar_info.totalTimeString,
+                draw.text((Width - seekbar_info.padding + 5, (Height - 12)), seekbar_info.totalTimeString,
                           font=self.seekbar_font, fill="white")
 
     def next_scroll_frame(self, scroll_infos):
@@ -241,6 +252,7 @@ class Spotify:
                     self.durationMs = playback['item']['duration_ms']
                     self.progressMs = playback['progress_ms']
                     self.nothingPlaying = False
+                    self.volume = self.get_vol()
                 else:
                     pass
 
@@ -262,15 +274,23 @@ class Spotify:
         if self.isPlaying:
             playback = self.sp.current_playback()
             self.volume = playback['device']['volume_percent']
+            if self.volume == 0:
+                self.isMuted = True
+            else:
+                self.isMuted = False
             return self.volume
 
     def __str__(self):
+        string = ""
+        if self.isMuted:
+            string += "MUTED - "
         if self.isPlaying:
-            return "Now playing " + self.track + " by " + self.artists[0]["name"] + " from Spotify"
+            string += "Now playing " + self.track + " by " + self.artists[0]["name"] + " from Spotify"
         if self.nothingPlaying:
-            return "Nothing playing"
+            string += "Nothing playing"
         else:
-            return "paused"
+            string += "Paused"
+        return string
 
 
 def update_all_UIs(UI, spotify_data):
@@ -333,6 +353,7 @@ if __name__ == "__main__":
         if spotify_data.progressMs is not None:
             last_song_pos = int(spotify_data.progressMs / 1000)
         last_song_is_playing = spotify_data.isPlaying
+        last_song_is_muted = spotify_data.isMuted
         spotify_data.get_playback()
         if spotify_data.nothingPlaying:
             print("Nothing playing")
@@ -348,6 +369,16 @@ if __name__ == "__main__":
         # if last_song is None and spotify_data.track is not None:  # un-paused
         if spotify_data.isPlaying and not last_song_is_playing:
             print("Un-paused")
+            ui = update_all_UIs(ui, spotify_data)
+            continue
+
+        if spotify_data.isMuted and not last_song_is_muted:
+            print("Muted")
+            ui = update_all_UIs(ui, spotify_data)
+            continue
+
+        if not spotify_data.isMuted and last_song_is_muted:
+            print("Un-muted")
             ui = update_all_UIs(ui, spotify_data)
             continue
 
