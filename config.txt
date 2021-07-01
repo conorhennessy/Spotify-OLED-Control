@@ -1,8 +1,10 @@
 [credentials]
 client_id = 
 client_secret = 
-redirect_uri = http://localhost/
 username = 
+redirect_uri = http://localhost:8080/
 
+# More sections can be created to allow for further config values
+# For example:
 [oled]
 speed = 0.8
