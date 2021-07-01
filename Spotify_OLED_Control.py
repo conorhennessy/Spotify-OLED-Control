@@ -275,28 +275,19 @@ class Spotify:
 
 def update_all_UIs(UI, spotify_data):
     print(spotify_data)
-    terminate_threads(UI)
-    UI = start_threads(spotify_data)
+    UI.finish()
+    UI = start_UI_thread(spotify_data)
     return UI
 
 
-def start_threads(spotify_data):
-    # print("Starting UI threads")
+def start_UI_thread(spotify_data):
     # TODO spotify data should not have None fields! where possible cache previous value
-    UI_objs = [UIThread(spotify_data)]
-
-    for i, obj in enumerate(UI_objs):
-        p = mp.Process(target=obj.run)
-        obj.proc = p
-        p.start()
+    UI_obj = UIThread(spotify_data)
+    p = mp.Process(target=UI_obj.run)
+    UI_obj.proc = p
+    p.start()
     mp.active_children()
-
-    return UI_objs
-
-
-def terminate_threads(UI_objs):
-    for p in UI_objs:
-        p.finish()
+    return UI_obj
 
 
 def remove_feat(track_name):
@@ -331,7 +322,7 @@ if __name__ == "__main__":
     spotify_data.get_playback()
     print(spotify_data)
     if spotify_data.isPlaying:
-        ui = start_threads(spotify_data)
+        ui = start_UI_thread(spotify_data)
 
     while True:
         try:
@@ -349,13 +340,13 @@ if __name__ == "__main__":
             continue
 
         # if spotify_data.track is None and last_song is not None:  # paused
-        if spotify_data.isPlaying is False and last_song_is_playing is True:
+        if not spotify_data.isPlaying and last_song_is_playing:
             print("Paused")
             ui = update_all_UIs(ui, spotify_data)
             continue
 
         # if last_song is None and spotify_data.track is not None:  # un-paused
-        if spotify_data.isPlaying is True and last_song_is_playing is False:
+        if spotify_data.isPlaying and not last_song_is_playing:
             print("Un-paused")
             ui = update_all_UIs(ui, spotify_data)
             continue
